@@ -275,6 +275,12 @@ select:focus-visible {
   color: var(--danger);
 }
 
+/* The user agent's [hidden] rule is display:none at the same specificity, so
+   the flex below would silently win and every card would render open. */
+.card-body[hidden] {
+  display: none;
+}
+
 .card-body {
   border-top: 1px solid var(--rule);
   padding: 10px 12px 12px;
