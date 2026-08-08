@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bellrope</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="bar">
+        <div class="brand">
+          <img src="icons/icon-32.png" alt="" width="22" height="22" />
+          <span>Bellrope</span>
+        </div>
+        <button id="check-all" class="ghost" type="button" title="Check every watch now">
+          Check all
+        </button>
+      </header>
+
+      <div class="toolbar">
+        <button id="watch-btn" class="primary" type="button">Watch something on this page</button>
+        <label class="interval">
+          <span>Check</span>
+          <select id="interval">
+            <option value="15">every 15 minutes</option>
+            <option value="60" selected>hourly</option>
+            <option value="360">every 6 hours</option>
+            <option value="1440">daily</option>
+          </select>
+        </label>
+      </div>
+
+      <main id="list" class="list" aria-live="polite"></main>
+
+      <footer class="foot">
+        <p id="foot-note">
+          Checks read the page as the server sends it. Bellrope contacts the pages you asked it to
+          watch and nothing else.
+        </p>
+      </footer>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="dist/sidepanel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,416 @@
+/* Bellrope
+ *
+ * A list you glance at to see whether anything has happened, so the design
+ * question is only ever "has something changed?". Everything is quiet except
+ * the answer: a violet that appears on exactly two things, the button that
+ * starts a watch and the watches that have news.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --paper: #f6f6f9;
+  --raised: #ffffff;
+  --ink: #17151f;
+  --ink-soft: #55516a;
+  --ink-faint: #8b87a0;
+  --rule: #e3e2ec;
+  --accent: #5b3fd6;
+  --accent-soft: #ece8ff;
+  --danger: #b03a4a;
+  --danger-soft: #fbe9ec;
+  --quiet: #8b87a0;
+
+  --radius: 10px;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #131120;
+    --raised: #1b1829;
+    --ink: #eae8f3;
+    --ink-soft: #aaa5c0;
+    --ink-faint: #7a7593;
+    --rule: #2a2640;
+    --accent: #a08cff;
+    --accent-soft: #241f3d;
+    --danger: #e08a97;
+    --danger-soft: #33202a;
+    --quiet: #7a7593;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header ------------------------------------------------------------------ */
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.brand img {
+  border-radius: 6px;
+}
+
+/* Controls ---------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  background: var(--raised);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.primary {
+  width: 100%;
+  padding: 11px;
+  font-weight: 650;
+  color: #fff;
+  background: var(--accent);
+  border-color: transparent;
+}
+
+@media (prefers-color-scheme: dark) {
+  .primary {
+    color: var(--paper);
+  }
+}
+
+.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
+.ghost:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.interval {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.interval select {
+  flex: 1;
+  padding: 6px 8px;
+}
+
+/* The list ---------------------------------------------------------------- */
+
+.list {
+  flex: 1;
+  padding: 10px 12px 20px;
+}
+
+.empty {
+  padding: 28px 4px;
+  color: var(--ink-soft);
+  max-width: 34em;
+}
+
+.empty-title {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.empty p {
+  margin: 0;
+}
+
+.card {
+  margin-bottom: 9px;
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Only a watch with news gets the accent. If everything is highlighted then
+   nothing is, and the entire job of this panel is answering one question. */
+.card.changed {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+}
+
+.card.failing {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--rule));
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.card-head:hover {
+  background: var(--accent-soft);
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--quiet);
+}
+
+.dot.changed {
+  background: var(--accent);
+}
+
+.dot.failing {
+  background: var(--danger);
+}
+
+.dot.paused {
+  background: transparent;
+  border: 1px solid var(--quiet);
+}
+
+.card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-title {
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-sub {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card.changed .card-sub {
+  color: var(--accent);
+}
+
+.card.failing .card-sub {
+  color: var(--danger);
+}
+
+.card-body {
+  border-top: 1px solid var(--rule);
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.value {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.link {
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--accent);
+}
+
+.change {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+  font-size: 12.5px;
+}
+
+.change:last-child {
+  border-bottom: none;
+}
+
+.change-when {
+  flex-shrink: 0;
+  width: 8.5em;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.change-what {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.act {
+  padding: 5px 11px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  background: transparent;
+}
+
+.act:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.act.danger:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Footer ------------------------------------------------------------------ */
+
+.foot {
+  padding: 14px 12px 20px;
+  border-top: 1px solid var(--rule);
+}
+
+.foot p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+  max-width: 40em;
+}
+
+/* Toast ------------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translate(-50%, calc(100% + 32px));
+  max-width: calc(100% - 24px);
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 22%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform 0.22s ease,
+    opacity 0.22s ease,
+    visibility 0.22s;
+}
+
+.toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
+  }
+}
