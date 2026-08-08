@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a problem.
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: A public URL is worth more than any description, because what the server sends is usually the explanation.
+      placeholder: 'https://...'
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem
+      options:
+        - A change happened but I was not told
+        - I was told about a change that did not happen
+        - The watch says the element is gone
+        - The page could not be watched at all
+        - The summary described the change wrongly
+        - The panel itself misbehaved
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: If a summary was wrong, paste it along with the before and after text shown on the card.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: chrome
+    attributes:
+      label: Chrome version
+      placeholder: 'chrome://version'
+  - type: input
+    id: version
+    attributes:
+      label: Bellrope version
+      placeholder: 'chrome://extensions'

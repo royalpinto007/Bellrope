@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+      # Bellrope does fetch, unlike the rest of these extensions, so "no
+      # network calls" is not the check. The check is that it has nowhere of
+      # its own to call: every request goes to a URL the user chose, and a
+      # hardcoded host appearing in the bundles would mean that stopped being
+      # true. localhost is allowed so the end-to-end fixture keeps working.
+      - name: No endpoints of our own in the shipped bundles
+        run: |
+          if grep -rnoE "https?://[a-zA-Z0-9.-]+" dist/ | grep -vE "localhost|127\.0\.0\.1|www\.w3\.org"; then
+            echo "::error::Bellrope must only contact pages the user chose. Remove the hardcoded URL."
+            exit 1
+          fi
+          echo "no hardcoded endpoints"
+
+      - name: No analytics or telemetry
+        run: |
+          if grep -rniE "sendBeacon|google-analytics|gtag\(|mixpanel|posthog|segment\.io|amplitude" dist/; then
+            echo "::error::Bellrope collects nothing and reports nothing."
+            exit 1
+          fi
+          echo "no analytics found"
+
+      # Watched text is quoted straight out of arbitrary pages, so all of it is
+      # attacker-controlled. It is rendered with textContent and innerHTML must
+      # not creep back in.
+      - name: No innerHTML in the source
+        run: |
+          if grep -rnE "innerHTML|outerHTML|insertAdjacentHTML" --include="*.ts" src/ ./*.ts; then
+            echo "::error::Use textContent. Watched page text is untrusted input."
+            exit 1
+          fi
+          echo "no innerHTML found"
+
+      # Page access is asked for when a watch is created, not held from install.
+      - name: No standing host permissions
+        run: |
+          node --input-type=module -e "
+          import fs from 'node:fs';
+          const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          if (m.host_permissions?.length) {
+            console.error('host_permissions must stay empty: ' + m.host_permissions.join(', '));
+            process.exit(1);
+          }
+          if (m.content_scripts?.length) {
+            console.error('content_scripts would run without being asked');
+            process.exit(1);
+          }
+          console.log('no standing page access');
+          "
+
+      - name: Manifest references files that exist
+        run: |
+          node --input-type=module -e "
+          import fs from 'node:fs';
+          const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          const refs = [
+            ...Object.values(m.icons || {}),
+            ...Object.values(m.action?.default_icon || {}),
+            m.background?.service_worker,
+            m.side_panel?.default_path,
+          ].filter(Boolean);
+          const missing = refs.filter((r) => !fs.existsSync(r));
+          if (missing.length) { console.error('missing: ' + missing.join(', ')); process.exit(1); }
+          console.log(\`manifest ok, \${refs.length} referenced files present\`);
+          "

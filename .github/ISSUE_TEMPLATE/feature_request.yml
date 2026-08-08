@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a change.
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is hard right now
+      description: The problem you hit, not the solution you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like Bellrope to do
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: What it would cost
+      description: |
+        Bellrope checks pages in the background, so anything that makes it check
+        more often, or check more pages, is a cost paid by the sites being
+        watched. Say what you think that cost is.
