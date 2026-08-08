@@ -1,0 +1,34 @@
+/**
+ * Generate the icon set from one SVG, so every size comes from the same source.
+ * Flat fills only: the SVG rasteriser available here silently drops gradients
+ * to black.
+ */
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#1a1626"/>
+  <!-- A bell with its rope: the rope is the thing you are given, the bell is
+       what it does. Tilted, because a bell at rest tells you nothing. -->
+  <path d="M64 26c-14 0-24 10-24 24v18l-8 12h64l-8-12V50c0-14-10-24-24-24z" fill="#a08cff"/>
+  <rect x="58" y="16" width="12" height="12" rx="6" fill="#d7cdff"/>
+  <path d="M52 86a12 12 0 0 0 24 0z" fill="#7a5cff"/>
+  <rect x="60" y="86" width="8" height="26" rx="4" fill="#d7cdff"/>
+</svg>`;
+
+fs.mkdirSync('icons', { recursive: true });
+fs.writeFileSync('icons/icon.svg', svg);
+
+for (const size of [16, 32, 48, 128, 512]) {
+  execFileSync('convert', [
+    '-background',
+    'none',
+    '-density',
+    '900',
+    'icons/icon.svg',
+    '-resize',
+    `${size}x${size}`,
+    `icons/icon-${size}.png`,
+  ]);
+  console.log(`icons/icon-${size}.png  ${fs.statSync(`icons/icon-${size}.png`).size} B`);
+}
