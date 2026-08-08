@@ -1,0 +1,25 @@
+{
+  "name": "bellrope",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Watch one part of a page and get told when it changes. Checks run in your browser, on a schedule you set.",
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "node tests/e2e.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.5",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.28.1",
+    "jsdom": "^30.0.1",
+    "playwright": "^1.62.1",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^7.0.2"
+  }
+}
