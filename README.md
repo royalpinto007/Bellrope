@@ -11,6 +11,54 @@ you are watching.
 [![Tech](https://img.shields.io/badge/Tech-TypeScript-5b3fd6.svg)](#how-it-works)
 
 <!-- media:start -->
+
+<p align="center">
+  <img src="docs/media/logo.png" width="96" alt="Bellrope logo">
+</p>
+
+<h3 align="center">Stop refreshing that page.</h3>
+
+<p align="center">
+  <a href="docs/media/demo.mp4">
+    <img src="docs/media/demo-thumbnail.webp" width="640" alt="Watch the Bellrope demo">
+  </a>
+  <br>
+  <a href="docs/media/demo.mp4"><b>Watch the 30 second demo</b></a>
+</p>
+
+## Screenshots
+
+![Everything you keep checking, checked for you.](docs/media/1-watches.webp)
+
+<sub>Everything you keep checking, checked for you.</sub>
+
+<details>
+<summary><b>See 3 more</b></summary>
+
+### What changed
+
+![Told what changed, not that something did.](docs/media/2-what-changed.webp)
+
+<sub>Told what changed, not that something did.</sub>
+
+### Schedule
+
+![As often as it is worth checking.](docs/media/3-schedule.webp)
+
+<sub>As often as it is worth checking.</sub>
+
+### Local
+
+![The list of pages you care about stays yours.](docs/media/4-local.webp)
+
+<sub>The list of pages you care about stays yours.</sub>
+
+</details>
+
+<sub>Every screenshot is captured from the real extension running in Chrome, not
+mocked up, so they cannot drift from what the product actually does. Regenerate
+them with the tooling in the store-publishing workspace.</sub>
+
 <!-- media:end -->
 
 ## Why
