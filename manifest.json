@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bellrope: Watch Pages for Changes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Watch one part of any page and get a notification when it changes. Checks run in your browser, not on someone's server.",
   "permissions": ["alarms", "notifications", "offscreen", "scripting", "sidePanel", "storage"],
   "icons": {

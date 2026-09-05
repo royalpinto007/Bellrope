@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.1.0] - 2026-09-06
+
+### Added
+
+- Redesigned side panel: watch count with a news highlight, gradient watch
+  button with a busy spinner, and search with a clear button.
+- All, News, Failing and Paused filter tabs for the watch list.
+- Avatar and status dot cards, timeline-style change history, emphasised
+  detail cards, and toast notifications.
+
 ## [1.0.0] - 2026-08-08
 
 First release.

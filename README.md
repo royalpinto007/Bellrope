@@ -86,6 +86,9 @@ When it changes you get a notification saying **what** changed:
 Not "the page changed", which sends you to the page to find out what, which is
 the work you installed this to avoid.
 
+The panel adds **search** and **All, News, Failing, Paused** filters, with a
+watch count that highlights when something has news.
+
 ## What it will not do
 
 Checks read the page as the server sends it. A page that builds itself in your
