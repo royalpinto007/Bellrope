@@ -1,7 +1,7 @@
 import { ago, intervalLabel } from './src/schedule.js';
 import * as store from './src/store.js';
 import type { Interval, Watch } from './src/types.js';
-import { sortWatches, statusOf } from './src/watch.js';
+import { sortWatches, statusOf, type Status } from './src/watch.js';
 
 /**
  * The panel.
@@ -16,9 +16,17 @@ const checkAllBtn = must<HTMLButtonElement>('check-all');
 const intervalSelect = must<HTMLSelectElement>('interval');
 const listEl = must<HTMLElement>('list');
 const toastEl = must<HTMLElement>('toast');
+const toastText = must<HTMLElement>('toast-text');
+const countEl = must<HTMLElement>('count');
+const searchWrap = must<HTMLElement>('search-wrap');
+const searchInput = must<HTMLInputElement>('search');
+const searchClear = must<HTMLButtonElement>('search-clear');
+const filterTabs = must<HTMLElement>('filter-tabs');
 
 /** Which watches have their history open, kept across re-renders. */
 const expanded = new Set<string>();
+let statusFilter: Status | 'all' = 'all';
+let query = '';
 
 watchBtn.addEventListener('click', () => void startWatch());
 checkAllBtn.addEventListener('click', () => void checkAll());
@@ -47,6 +55,13 @@ async function ensureAccess(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function setBusy(busy: boolean, text: string): void {
+  watchBtn.disabled = busy;
+  watchBtn.classList.toggle('is-busy', busy);
+  const label = watchBtn.querySelector('.primary-label');
+  if (label) label.textContent = text;
 }
 
 async function startWatch(): Promise<void> {
@@ -91,42 +106,106 @@ async function checkAll(): Promise<void> {
   }
 }
 
+function matches(watch: Watch, now: number): boolean {
+  if (statusFilter !== 'all' && statusOf(watch, now) !== statusFilter) return false;
+  if (query) {
+    const hay = `${watch.label} ${watch.url} ${watch.text}`.toLowerCase();
+    if (!hay.includes(query.toLowerCase())) return false;
+  }
+  return true;
+}
+
 async function render(): Promise<void> {
   const now = Date.now();
   const watches = await store.readAll();
+  const news = watches.filter((w) => statusOf(w, now) === 'changed').length;
+
+  countEl.textContent = watches.length
+    ? `${watches.length} watch${watches.length === 1 ? '' : 'es'}`
+    : '';
+  countEl.classList.toggle('has-news', news > 0);
+
+  const showChrome = watches.length > 0;
+  searchWrap.hidden = !showChrome;
+  filterTabs.hidden = !showChrome;
+  searchClear.hidden = !query;
+  for (const btn of filterTabs.querySelectorAll<HTMLButtonElement>('button')) {
+    btn.setAttribute('aria-pressed', String(btn.dataset.filter === statusFilter));
+  }
 
   if (!watches.length) {
     listEl.replaceChildren(empty());
     return;
   }
-  listEl.replaceChildren(...sortWatches(watches, now).map((w) => card(w, now)));
+
+  const visible = sortWatches(watches, now).filter((w) => matches(w, now));
+  if (!visible.length) {
+    const el = document.createElement('div');
+    el.className = 'empty';
+    el.append(
+      art('🔍'),
+      emptyTitle('Nothing matches that filter.'),
+      emptyBody('Try a different search, or switch back to All watches.')
+    );
+    listEl.replaceChildren(el);
+    return;
+  }
+  listEl.replaceChildren(...visible.map((w) => card(w, now)));
+}
+
+function art(emoji: string): HTMLElement {
+  const d = document.createElement('div');
+  d.className = 'empty-art';
+  d.textContent = emoji;
+  d.setAttribute('aria-hidden', 'true');
+  return d;
+}
+
+function emptyTitle(text: string): HTMLElement {
+  const el = document.createElement('p');
+  el.className = 'empty-title';
+  el.textContent = text;
+  return el;
+}
+
+function emptyBody(text: string): HTMLElement {
+  const el = document.createElement('p');
+  el.textContent = text;
+  return el;
 }
 
 function empty(): HTMLElement {
   const el = document.createElement('div');
   el.className = 'empty';
-
-  const title = document.createElement('p');
-  title.className = 'empty-title';
-  title.textContent = 'Nothing being watched yet.';
+  el.append(art('🔔'), emptyTitle('Nothing being watched yet.'));
 
   const body = document.createElement('p');
   body.textContent =
     'Open a page, press the button above, then click the price, the stock line, the version number, whatever you keep coming back to check.';
-
-  el.append(title, body);
+  el.append(body);
   return el;
+}
+
+function avatarLetter(label: string): string {
+  return (label.trim().charAt(0) || 'W').toUpperCase();
 }
 
 function card(watch: Watch, now: number): HTMLElement {
   const status = statusOf(watch, now);
+  const isOpen = expanded.has(watch.id);
   const card = document.createElement('section');
-  card.className = `card ${status}`;
+  card.className = `card ${status}${isOpen ? ' open' : ''}`;
 
   const head = document.createElement('button');
   head.className = 'card-head';
   head.type = 'button';
-  head.setAttribute('aria-expanded', String(expanded.has(watch.id)));
+  head.setAttribute('aria-expanded', String(isOpen));
+  head.setAttribute('aria-label', `${watch.label}, ${subtitle(watch, status, now)}`);
+
+  const avatar = document.createElement('span');
+  avatar.className = 'avatar';
+  avatar.textContent = avatarLetter(watch.label);
+  avatar.setAttribute('aria-hidden', 'true');
 
   const dot = document.createElement('span');
   dot.className = `dot ${status}`;
@@ -145,17 +224,24 @@ function card(watch: Watch, now: number): HTMLElement {
   sub.textContent = subtitle(watch, status, now);
 
   main.append(title, sub);
-  head.append(dot, main);
+
+  const chev = document.createElement('span');
+  chev.className = 'chev';
+  chev.textContent = '▾';
+  chev.setAttribute('aria-hidden', 'true');
+
+  head.append(avatar, dot, main, chev);
 
   const body = document.createElement('div');
   body.className = 'card-body';
-  body.hidden = !expanded.has(watch.id);
+  body.hidden = !isOpen;
   body.append(...details(watch, now));
 
   head.addEventListener('click', () => {
-    const open = body.hidden;
+    const open = Boolean(body.hidden);
     body.hidden = !open;
     head.setAttribute('aria-expanded', String(open));
+    card.classList.toggle('open', open);
     if (open) expanded.add(watch.id);
     else expanded.delete(watch.id);
   });
@@ -165,10 +251,10 @@ function card(watch: Watch, now: number): HTMLElement {
 }
 
 function subtitle(watch: Watch, status: string, now: number): string {
-  if (status === 'paused') return `Paused. ${hostOf(watch.url)}`;
+  if (status === 'paused') return `Paused · ${hostOf(watch.url)}`;
   if (status === 'failing') return watch.lastError ?? 'Last check failed.';
-  if (status === 'changed' && watch.history[0]) return watch.history[0].summary;
-  return `${hostOf(watch.url)}, checked ${ago(watch.lastCheckedAt, now)}`;
+  if (status === 'changed' && watch.history[0]) return `Changed · ${watch.history[0].summary}`;
+  return `${hostOf(watch.url)} · checked ${ago(watch.lastCheckedAt, now)}`;
 }
 
 function details(watch: Watch, now: number): HTMLElement[] {
@@ -176,7 +262,7 @@ function details(watch: Watch, now: number): HTMLElement[] {
 
   const current = document.createElement('div');
   current.className = 'field';
-  current.append(label('Currently'), value(watch.text || '(empty)'));
+  current.append(label('Currently'), changedValue(watch));
   out.push(current);
 
   const where = document.createElement('div');
@@ -188,7 +274,9 @@ function details(watch: Watch, now: number): HTMLElement[] {
   link.textContent = watch.url;
   link.className = 'value link';
   where.append(
-    label(`${intervalLabel(watch.intervalMinutes)}, last checked ${ago(watch.lastCheckedAt, now)}`),
+    label(
+      `${intervalLabel(watch.intervalMinutes)} · last checked ${ago(watch.lastCheckedAt, now)}`
+    ),
     link
   );
   out.push(where);
@@ -197,6 +285,8 @@ function details(watch: Watch, now: number): HTMLElement[] {
     const history = document.createElement('div');
     history.className = 'field';
     history.append(label(`${watch.history.length} change${watch.history.length === 1 ? '' : 's'}`));
+    const timeline = document.createElement('div');
+    timeline.className = 'history';
     for (const change of watch.history.slice(0, 5)) {
       const row = document.createElement('div');
       row.className = 'change';
@@ -210,8 +300,9 @@ function details(watch: Watch, now: number): HTMLElement[] {
       what.textContent = change.summary;
 
       row.append(when, what);
-      history.append(row);
+      timeline.append(row);
     }
+    history.append(timeline);
     out.push(history);
   }
 
@@ -246,17 +337,17 @@ function details(watch: Watch, now: number): HTMLElement[] {
   return out;
 }
 
-function label(text: string): HTMLElement {
-  const el = document.createElement('span');
-  el.className = 'label';
-  el.textContent = text;
-  return el;
-}
-
-function value(text: string): HTMLElement {
+function changedValue(watch: Watch): HTMLElement {
   const el = document.createElement('span');
   el.className = 'value';
   // Watched text comes from arbitrary pages, so it is never markup.
+  el.textContent = watch.text || '(empty)';
+  return el;
+}
+
+function label(text: string): HTMLElement {
+  const el = document.createElement('span');
+  el.className = 'label';
   el.textContent = text;
   return el;
 }
@@ -275,11 +366,6 @@ function action(text: string, run: () => Promise<void>, kind = ''): HTMLElement 
   return el;
 }
 
-function setBusy(busy: boolean, text: string): void {
-  watchBtn.disabled = busy;
-  watchBtn.textContent = text;
-}
-
 function hostOf(url: string): string {
   try {
     return new URL(url).host;
@@ -290,7 +376,7 @@ function hostOf(url: string): string {
 
 let toastTimer = 0;
 function toast(message: string): void {
-  toastEl.textContent = message;
+  toastText.textContent = message;
   toastEl.classList.add('show');
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), 3600);
@@ -301,3 +387,23 @@ function must<T extends HTMLElement>(id: string): T {
   if (!el) throw new Error(`Missing #${id}`);
   return el as T;
 }
+
+searchInput.addEventListener('input', () => {
+  query = searchInput.value;
+  void render();
+  searchInput.focus();
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  query = '';
+  void render();
+  searchInput.focus();
+});
+
+filterTabs.addEventListener('click', (event) => {
+  const btn = (event.target as HTMLElement).closest('button[data-filter]');
+  if (!btn) return;
+  statusFilter = (btn as HTMLButtonElement).dataset.filter as Status | 'all';
+  void render();
+});

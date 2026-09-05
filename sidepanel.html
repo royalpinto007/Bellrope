@@ -10,37 +10,99 @@
     <div id="app">
       <header class="bar">
         <div class="brand">
-          <img src="icons/icon-32.png" alt="" width="22" height="22" />
-          <span>Bellrope</span>
+          <span class="brand-icon"
+            ><img src="icons/icon-32.png" alt="" width="22" height="22"
+          /></span>
+          <span class="brand-name">Bellrope</span>
+          <span class="count" id="count" aria-live="polite"></span>
         </div>
-        <button id="check-all" class="ghost" type="button" title="Check every watch now">
+        <button id="check-all" class="ghost small-btn" type="button" title="Check every watch now">
           Check all
         </button>
       </header>
 
       <div class="toolbar">
-        <button id="watch-btn" class="primary" type="button">Watch something on this page</button>
-        <label class="interval">
-          <span>Check</span>
-          <select id="interval">
-            <option value="15">every 15 minutes</option>
-            <option value="60" selected>hourly</option>
-            <option value="360">every 6 hours</option>
-            <option value="1440">daily</option>
-          </select>
-        </label>
+        <button id="watch-btn" class="primary" type="button">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 2a4.5 4.5 0 0 1 4.5 4.5c0 3 1.2 4.3 1.9 4.9a.6.6 0 0 1-.44 1.1H2.04a.6.6 0 0 1-.44-1.1c.7-.6 1.9-1.9 1.9-4.9A4.5 4.5 0 0 1 8 2ZM6.6 14.3a1.5 1.5 0 0 0 2.8 0"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span class="primary-label">Watch something on this page</span>
+        </button>
+        <div class="toolbar-row">
+          <label class="interval">
+            <span>Check</span>
+            <span class="select-wrap">
+              <select id="interval">
+                <option value="15">every 15 minutes</option>
+                <option value="60" selected>hourly</option>
+                <option value="360">every 6 hours</option>
+                <option value="1440">daily</option>
+              </select>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                <path
+                  d="m2.5 4 2.5 2.5L7.5 4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+          </label>
+        </div>
+        <div class="search-wrap" id="search-wrap" hidden>
+          <svg
+            class="search-icon"
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.6" />
+            <path
+              d="m10.7 10.7 3 3"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+          <input
+            id="search"
+            type="search"
+            placeholder="Search watches"
+            aria-label="Search watches"
+            autocomplete="off"
+          />
+          <button id="search-clear" class="search-clear" aria-label="Clear search" hidden>×</button>
+        </div>
+        <div class="filter-tabs" id="filter-tabs" role="group" aria-label="Filter watches" hidden>
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="changed" aria-pressed="false">News</button>
+          <button type="button" data-filter="failing" aria-pressed="false">Failing</button>
+          <button type="button" data-filter="paused" aria-pressed="false">Paused</button>
+        </div>
       </div>
 
       <main id="list" class="list" aria-live="polite"></main>
 
       <footer class="foot">
         <p id="foot-note">
+          <span aria-hidden="true">🔒</span>
           Checks read the page as the server sends it. Bellrope contacts the pages you asked it to
           watch and nothing else.
         </p>
       </footer>
 
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div id="toast" class="toast" role="status" aria-live="polite">
+        <span class="toast-dot" aria-hidden="true"></span><span id="toast-text"></span>
+      </div>
     </div>
     <script type="module" src="dist/sidepanel.js"></script>
   </body>
